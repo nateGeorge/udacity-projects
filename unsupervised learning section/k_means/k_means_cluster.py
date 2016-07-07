@@ -10,6 +10,7 @@ import pickle
 import numpy
 import matplotlib.pyplot as plt
 import sys
+import re
 sys.path.append("../tools/")
 from feature_format import featureFormat, targetFeatureSplit
 
@@ -69,6 +70,8 @@ poi, finance_features = targetFeatureSplit(data)
 # (as it's currently written, the line below assumes 2 features)
 for f1, f2 in finance_features:
     plt.scatter(f1, f2)
+    plt.xlabel(feature_1)
+    plt.ylabel(re.sub('_', ' ', feature_2))
 plt.show()
 
 # cluster here; create predictions of the cluster labels
