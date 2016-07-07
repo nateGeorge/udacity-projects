@@ -6,13 +6,14 @@
 
 
 
-
+from __future__ import print_function
 import pickle
 import numpy
 import matplotlib.pyplot as plt
 import sys
 sys.path.append("../tools/")
 from feature_format import featureFormat, targetFeatureSplit
+
 
 
 
