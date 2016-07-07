@@ -14,6 +14,7 @@ import re
 sys.path.append("../tools/")
 from feature_format import featureFormat, targetFeatureSplit
 from sklearn.cluster import KMeans
+import pandas as pd
 
 
 def Draw(
@@ -54,6 +55,14 @@ data_dict = pickle.load(
 # there's an outlier--remove it!
 data_dict.pop("TOTAL", 0)
 
+# let's do some analysis in pandas
+enron = pd.DataFrame.from_dict(data_dict)
+enron.reset_index(inplace=True)
+enron.rename(columns='index': 'name', inplace=True)
+print('max options:', enron2['exercised_stock_options'].dropna().astype('float64').max())
+print('min options:', enron2['exercised_stock_options'].dropna().astype('float64').min())
+print('max salary:', enron2['salary'].dropna().astype('float64').max())
+print('min salary:', enron2['salary'].dropna().astype('float64').min())
 
 # the input features we want to use
 # can be any key in the person-level dictionary (salary, director_fees, etc.)
