@@ -48,7 +48,7 @@ def Draw(
 # load in the dict of dicts containing all the data on each person in the
 # dataset
 data_dict = pickle.load(
-    open("../final_project/final_project_dataset.pkl", "r"))
+    open("../final_project/final_project_dataset.pkl", "rb"))
 # there's an outlier--remove it!
 data_dict.pop("TOTAL", 0)
 
