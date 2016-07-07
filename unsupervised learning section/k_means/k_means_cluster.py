@@ -59,8 +59,10 @@ data_dict.pop("TOTAL", 0)
 enron = pd.DataFrame.from_dict(data_dict)
 enron.reset_index(inplace=True)
 enron.rename(columns='index': 'name', inplace=True)
-print('max options:', enron2['exercised_stock_options'].dropna().astype('float64').max())
-print('min options:', enron2['exercised_stock_options'].dropna().astype('float64').min())
+print('max options:', enron2[
+      'exercised_stock_options'].dropna().astype('float64').max())
+print('min options:', enron2[
+      'exercised_stock_options'].dropna().astype('float64').min())
 print('max salary:', enron2['salary'].dropna().astype('float64').max())
 print('min salary:', enron2['salary'].dropna().astype('float64').min())
 
@@ -89,7 +91,7 @@ plt.show()'''
 # cluster here; create predictions of the cluster labels
 # for the data and store them to a list called pred
 clst = KMeans(n_clusters=2, random_state=42)
-#clst.fit(finance_features)
+# clst.fit(finance_features)
 pred = clst.fit_predict(finance_features)
 
 # rename the "name" parameter when you change the number of features
