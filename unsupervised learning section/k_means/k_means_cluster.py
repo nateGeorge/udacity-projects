@@ -13,6 +13,7 @@ import sys
 import re
 sys.path.append("../tools/")
 from feature_format import featureFormat, targetFeatureSplit
+from sklearn.cluster import KMeans
 
 
 def Draw(
@@ -68,16 +69,18 @@ poi, finance_features = targetFeatureSplit(data)
 # you'll want to change this line to
 # for f1, f2, _ in finance_features:
 # (as it's currently written, the line below assumes 2 features)
-for f1, f2 in finance_features:
+'''for f1, f2 in finance_features:
     plt.scatter(f1, f2)
 
 plt.xlabel(feature_1)
 plt.ylabel(re.sub('_', ' ', feature_2))
-plt.show()
+plt.show()'''
 
 # cluster here; create predictions of the cluster labels
 # for the data and store them to a list called pred
-
+clst = KMeans(n_clusters=2, random_state=42)
+#clst.fit(finance_features)
+pred = clst.fit_predict(finance_features, )
 
 # rename the "name" parameter when you change the number of features
 # so that the figure gets saved to a different file
