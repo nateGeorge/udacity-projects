@@ -71,7 +71,7 @@ print("Extracting the top %d eigenfaces from %d faces" % (n_components, X_train.
 t0 = time()
 pca = RandomizedPCA(n_components=n_components, whiten=True).fit(X_train)
 
-print('ANSWER:')
+print('ANSWER #1:')
 print(pca.explained_variance_ratio_[:2])
 
 print("done in %0.3fs" % (time() - t0))
@@ -142,3 +142,13 @@ eigenface_titles = ["eigenface %d" % i for i in range(eigenfaces.shape[0])]
 plot_gallery(eigenfaces, eigenface_titles, h, w)
 
 pl.show()
+
+# answer for #2
+for n_comp in [10, 15, 25, 50, 100, 250]:
+    pca = RandomizedPCA(n_components=n_comp, whiten=True).fit(X_train)
+    eigenfaces = pca.components_.reshape((n_comp, h, w))
+    clf = clf.fit(X_train_pca, y_train)
+    y_pred = clf.predict(X_test_pca)
+    print('number of components:', n_comp)
+    print(classification_report(y_test, y_pred, target_names=target_names))
+    
