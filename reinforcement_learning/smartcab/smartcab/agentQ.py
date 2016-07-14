@@ -27,8 +27,8 @@ class LearningAgent(Agent):
         
         # initialize variables
         self.qDict = dict()
-        self.alpha = 0.1
-        self.gamma = 0.8
+        self.alpha = 0.6
+        self.gamma = 0.2
         
         self.previous_state = None
         self.previous_action = None    
