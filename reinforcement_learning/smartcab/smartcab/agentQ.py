@@ -52,7 +52,6 @@ class LearningAgent(Agent):
         self.previous_state = None
         self.state = None
         self.previous_action = None
-        self.epsilon = 0.0
         self.total_rewards += self.rewards
         self.rewards = 0
         self.total_penalties += self.penalties
@@ -298,5 +297,5 @@ def tune_a_g():
     print 'took', int(end-start), 'seconds'
     
 if __name__ == '__main__':
-    #run()
-    tune_a_g()
+    run()
+    #tune_a_g()
