@@ -3,12 +3,15 @@ references:
 https://github.com/rahulravindran0108/Smart-cab
 '''
 
+import time
 import random
+import pickle as pk
+import numpy as np
+
 from environment import Agent, Environment
 from planner import RoutePlanner
 from simulator import Simulator
 from numpy.random import randint
-import numpy as np
 from collections import namedtuple
 
 class LearningAgent(Agent):
@@ -35,10 +38,14 @@ class LearningAgent(Agent):
         
         self.penalties = 0
         self.total_penalties = 0
-        self.total_reward = 0
-        self.total_reward_all_trials = 0
+        self.rewards = 0
+        self.total_rewards = 0
+        
         self.non_ideal_moves = 0
+        self.total_non_ideal_moves = 0
+        self.actions = 0
         self.total_actions = 0
+        
 
     def reset(self, destination=None):
         self.planner.route_to(destination)
@@ -46,12 +53,12 @@ class LearningAgent(Agent):
         self.state = None
         self.previous_action = None
         self.epsilon = 0.0
-        self.total_reward_all_trials += self.total_reward
-        self.total_reward = 0
+        self.total_rewards += self.rewards
+        self.rewards = 0
         self.total_penalties += self.penalties
         self.penalties = 0
         self.non_ideal_moves = 0
-        self.total_actions = 0
+        self.actions = 0
         
     def setAG(self, alpha, gamma):
         '''
@@ -122,9 +129,9 @@ class LearningAgent(Agent):
         '''
         prints statistics from trial
         '''
-        print 'penlaties, rewards:', self.penalties, self.total_reward
+        print 'penlaties, rewards:', self.penalties, self.rewards
         print 'non ideal moves:', self.non_ideal_moves
-        print 'percent non-ideal:', round(self.non_ideal_moves/float(self.total_actions), 2)*100
+        print 'percent non-ideal:', round(self.non_ideal_moves/float(self.actions), 2)*100
         print ''
         print ''
     
@@ -134,6 +141,7 @@ class LearningAgent(Agent):
 
         # get the current best action based on q table
         action = self.getPolicy(self.state)
+        self.actions += 1
         self.total_actions += 1
         non_ideal = self.checkMove(action)
         reward = self.env.act(self, action)
@@ -159,7 +167,7 @@ class LearningAgent(Agent):
         self.previous_action = action
         self.previous_state = self.state
         self.previous_reward = reward
-        self.total_reward += reward
+        self.rewards += reward
 
     def updateQTable(self, state, action, nextState, reward):
         '''
@@ -199,6 +207,7 @@ class LearningAgent(Agent):
             print 'action, waypoint', action, self.next_waypoint
             print self.state
             self.non_ideal_moves += 1
+            self.total_non_ideal_moves += 1
             return True
         else:
             return False
@@ -221,63 +230,73 @@ def run():
 
     print 'alpha, gamma:', a.alpha, a.gamma
     print 'penalties:', a.total_penalties
-    print 'total rewards:', a.total_reward_all_trials
+    print 'total rewards:', a.total_rewards
 
 def tune_a_g():
+    '''
+    tries each combination of alpha and gamma from 0.1 to 0.9 in 0.1 increments
+    '''
+    start = time.time()
     tryRange = range(1, 10)
     tryRange = [i/10.0 for i in tryRange]
     
-    # run first to get best alpha
-    
-    aScores = {} # dict of scores for alphas with gamma = 0.3
-    
-    for i in tryRange:
-        aScores [i] = 0
-        for j in range(10): # run 10 times each because it is stochastic
-            e = Environment()  # create environment (also adds some dummy traffic)
-            a = e.create_agent(LearningAgent)  # create agent
-            e.set_primary_agent(a, enforce_deadline=True)  # specify agent to track
-            a.setAG(i, 0.4)
-            # NOTE: You can set enforce_deadline=False while debugging to allow longer trials
-
-            # Now simulate it
-            sim = Simulator(e, update_delay=0.0000000001, display=False)  # create simulator (uses pygame when display=True, if available)
-            # NOTE: To speed up simulation, reduce update_delay and/or set display=False
-
-            sim.run(n_trials=100)  # run for a specified number of trials
-            aScores[i] += a.total_penalties
-            
-    # get best alpha with lowest penalties
-    print 'aScores =', sorted(aScores.items())
-    bestA = max(aScores, key=aScores.get)
-    print 'best:', bestA
-    
-    '''
-    # run this to get best gamma, then run best alpha again with best gamma
-    gScores = {} # dict of scores for gammas with best alpha
+    rewards = {} # dict of total rewards for different alphas and gammas
+    penalties = {}
+    total_actions = {} # total number of time steps taken
+    non_ideal_actions = {}
     
     for i in tryRange:
-        gScores [i] = 0
-        for j in range(10): # run 10 times each because it is stochastic
-            e = Environment()  # create environment (also adds some dummy traffic)
-            a = e.create_agent(LearningAgent)  # create agent
-            e.set_primary_agent(a, enforce_deadline=True)  # specify agent to track
-            a.setAG(0.8, i)
-            # NOTE: You can set enforce_deadline=False while debugging to allow longer trials
+        for j in tryRange:
+            penalties['a=' + str(i) + ', g=' + str(j)] = 0
+            rewards['a=' + str(i) + ', g=' + str(j)] = 0
+            total_actions['a=' + str(i) + ', g=' + str(j)] = 0
+            non_ideal_actions['a=' + str(i) + ', g=' + str(j)] = 0
+            for k in range(10): # run 10 times each because it is stochastic, ideally should run this more times to get better statistics
+                e = Environment()  # create environment (also adds some dummy traffic)
+                a = e.create_agent(LearningAgent)  # create agent
+                e.set_primary_agent(a, enforce_deadline=True)  # specify agent to track
+                a.setAG(i, j)
+                # NOTE: You can set enforce_deadline=False while debugging to allow longer trials
 
-            # Now simulate it
-            sim = Simulator(e, update_delay=0.0000000001, display=False)  # create simulator (uses pygame when display=True, if available)
-            # NOTE: To speed up simulation, reduce update_delay and/or set display=False
+                # Now simulate it
+                sim = Simulator(e, update_delay=0.0000000001, display=False)  # create simulator (uses pygame when display=True, if available)
+                # NOTE: To speed up simulation, reduce update_delay and/or set display=False
 
-            sim.run(n_trials=100)  # run for a specified number of trials
-            gScores[i] += a.total_penalties
+                sim.run(n_trials=100)  # run for a specified number of trials
+                penalties['a=' + str(i) + ', g=' + str(j)] += a.total_penalties
+                rewards['a=' + str(i) + ', g=' + str(j)] += a.total_rewards
+                total_actions['a=' + str(i) + ', g=' + str(j)] += a.total_actions
+                non_ideal_actions['a=' + str(i) + ', g=' + str(j)] += a.total_non_ideal_moves
             
-    # get best gamma with lowest penalties
-    print 'gScores =', sorted(gScores.items())
-    bestG = max(gScores, key=gScores.get)
-    print 'best:', bestG
-    '''
+    # get best alpha/gamma with lowest penalties
+    #print 'penalties =', sorted(penalties.items())
+    bestP = max(penalties, key=penalties.get)
+    print 'best by penalties:', bestP, penalties[bestP]
+    
+    # get best alpha/gamma with highest total rewards
+    #print 'rewards =', sorted(rewards.items())
+    bestR = max(rewards, key=rewards.get)
+    print 'best by rewards:', bestR, rewards[bestR]
+    
+    # get best alpha/gamma with highest total rewards
+    #print 'total_actions =', sorted(total_actions.items())
+    bestTA = min(total_actions, key=total_actions.get)
+    print 'best by time steps:', bestTA, total_actions[bestTA]
+    
+    # get best alpha/gamma with highest total rewards
+    #print 'non_ideal_actions =', sorted(non_ideal_actions.items())
+    bestNIA = min(non_ideal_actions, key=non_ideal_actions.get)
+    print 'best by non_ideal_actions:', bestNIA, non_ideal_actions[bestNIA]
+    
+    pk.dump(penalties, open('penalties.pk','w'))
+    pk.dump(rewards, open('rewards.pk','w'))
+    pk.dump(total_actions, open('total_actions.pk','w'))
+    pk.dump(non_ideal_actions, open('non_ideal_actions.pk','w'))
+    
+    end = time.time()
+    
+    print 'took', int(end-start), 'seconds'
     
 if __name__ == '__main__':
-    run()
-    #tune_a_g()
+    #run()
+    tune_a_g()
