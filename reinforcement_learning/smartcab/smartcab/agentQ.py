@@ -176,7 +176,7 @@ class LearningAgent(Agent):
         '''
     
         if (state, action) not in self.qDict:
-            self.qDict[(state, action)] = reward
+            self.qDict[(state, action)] = 3 # setting a high default Qvalue makes the learner optimistic
         else:
             # set the previous state's qValue to itself plus alpha*(reward + gamma*value of next state - old q value)
             self.qDict[(state, action)] = self.qDict[(state, action)] + self.alpha*(reward + self.gamma*self.getValue(nextState) - self.qDict[(state, action)])
